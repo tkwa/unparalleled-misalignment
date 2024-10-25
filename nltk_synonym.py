@@ -12,43 +12,18 @@ from sklearn.metrics import roc_auc_score
 
 from nltk.corpus import wordnet as wn
 import nltk
+from util import load_easy_upmas, make_control_scrambled_aabb
 
 # Download required NLTK data (run once)
 nltk.download('wordnet')
-# parse data.txt
-with io.open('data.txt', 'r', encoding='utf-8') as f:
-    data = [l.split('//') for l in f.read().splitlines()]
-    data = [[*map(str.strip, l)] for l in data]
-    print(data)
 
-c = Counter(len(l) for l in data)
-print(c)
-
-# just do pairs to keep it simple
-data = [l[:2] for l in data]
 
 # %%
 
-word_counts = []
-easy_upmas = []
-for l in data:
-    this_word_count = tuple(len(phrase.split()) for phrase in l)
-    if this_word_count == (2, 2):
-        easy_upmas.append(tuple(phrase.split() for phrase in l))
-    word_counts.append(this_word_count)
-
-word_counts_counter = Counter(word_counts)
-print(word_counts_counter)
+easy_upmas = load_easy_upmas('data.txt')
 
 # Now create a control set by scrambling the phrases
-import random
-control = []
-for ph1, orig_ph2 in easy_upmas:
-    while True:
-        ph2 = random.choice(easy_upmas)[1]
-        if ph2 != orig_ph2:
-            break
-    control.append((ph1, ph2))
+control = make_control_scrambled_aabb(easy_upmas)
     
 
 # %%
