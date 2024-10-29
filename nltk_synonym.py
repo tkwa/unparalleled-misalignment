@@ -141,6 +141,7 @@ metrics = [
     functools.partial(wn.lin_similarity, ic=brown_ic),
 ]
 
-compare_metrics(metrics, verbose=True)
+if __name__ == "__main__":
+    compare_metrics(metrics, verbose=True)
 
 # path similarity does best
