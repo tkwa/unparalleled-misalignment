@@ -1,0 +1,5 @@
+type
+control_aabb    19.072115
+control_syn     16.322222
+upma            20.605769
+Name: gpt-4o-mini, dtype: float64
