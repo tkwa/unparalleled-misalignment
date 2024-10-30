@@ -1,6 +1,6 @@
 # %%
 
-from util import load_easy_upmas, make_control_scrambled_aabb, Phrase, make_control_syn
+from util import load_easy_upmas, make_control_scrambled_aabb, Phrase, make_control_syn, token_rates
 import key
 from tqdm.notebook import tqdm
 import itertools
@@ -112,16 +112,13 @@ On the last line, write the final score.
 {p1} // {p2}
 """
 
-token_rates = {
-    "gpt-4o": 10.00,
-    "gpt-4o-mini": 0.600,
-}
-
 upma1 = ("hot dog", Phrase("cold cat"))
 
 prompt_for_upma1 = prompt.format(p1=upma1[0], p2=upma1[1])
 
 prompt_fn = lambda upma: prompt.format(p1=upma[0], p2=upma[1])
+
+
 def query_model(upma, model='gpt-4o-mini', prompt_fn=prompt_fn, verbose=False):
     prompt = prompt_fn(upma)
     messages = [
@@ -291,8 +288,9 @@ print(f"AUC (weighted): {auc_weighted:.3f}")
 
 # %%
 
-c = scored_df[(scored_df.is_upma == False) & (scored_df['weighted_score'] >= 0.9)]
-print(c)
+c = scored_df[(scored_df.is_upma == False) & (scored_df['weighted_score'] >= 0.8)]
+c
+# %%
 
 for k, v in c.content[537].items():
     print(k, v)
@@ -304,5 +302,5 @@ c = scored_df[scored_df.is_upma == True].sort_values('weighted_score')
 c.head(20)
 
 # %%
-top5 = c.tail(5).iloc[::-1][['ph0', 'ph1', 'weighted_score', 'content']]
-top5
+top20 = c.tail(20).iloc[::-1][['ph0', 'ph1', 'weighted_score', 'content']]
+top20

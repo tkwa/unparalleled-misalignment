@@ -5,6 +5,7 @@ from nltk.corpus import wordnet as wn
 import nltk
 import random
 
+
 # %%
 
 class Phrase:
@@ -21,6 +22,9 @@ class Phrase:
     def __eq__(self, other):
         return (self.word1 == other.word1 and self.word2 == other.word2) or \
                (self.word1 == other.word2 and self.word2 == other.word1)
+    
+    def __lt__(self, other):
+        return str(self) < str(other)
 
     def __getitem__(self, item):
         return self.words[item]
@@ -81,3 +85,11 @@ def make_control_syn(upmas):
         new_ph2 = Phrase(new_ph2)
         control.append((ph1, new_ph2))
     return control
+
+
+token_rates = {
+    "gpt-4o": 10.00,
+    "gpt-4o-mini": 0.600,
+}
+
+

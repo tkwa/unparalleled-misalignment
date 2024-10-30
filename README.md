@@ -5,3 +5,8 @@ Current goal is to score a candidate phrase pair "a0 a1 // b0 b1" as something l
     score(a, b) = synonym_score(a0, b0) + synonym_score(a1, b1) + \
                   collocation_score(a) + collocation_score(b) + \
                   dramatic_meaning_difference(a, b)
+
+To run scripts that call OpenAI models, put your OpenAI API key in `key` then run
+
+    import os
+    os.environ['OPENAI_API_KEY']=key
