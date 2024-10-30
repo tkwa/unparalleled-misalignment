@@ -49,10 +49,10 @@ print(f"{len(urban_dictionary_phrases)} unique words in Urban Dictionary")
 
 # Overlap between WordNet and Urban Dictionary
 overlap = set(wordnet_phrases) & set(urban_dictionary_phrases)
-print(f"Overlap: {len(overlap)}")
+print(f"Overlap WN/UD: {len(overlap)}")
 
 union = set(wordnet_phrases) | set(urban_dictionary_phrases)
-print(f"Union: {len(union)}")
+print(f"Union WN/UD: {len(union)}")
 
 # %%
 
@@ -66,3 +66,8 @@ print(f"Loaded {len(gpt4o_mini_phrases)} phrases from lots_of_phrases.log")
 
 triple_union = set(wordnet_phrases) | set(urban_dictionary_phrases) | set(gpt4o_mini_phrases)
 print(f"Triple union: {len(triple_union)}")
+
+# %%
+
+all_words = set(w for p in triple_union for w in p)
+print(f"Total unique words: {len(all_words)}")

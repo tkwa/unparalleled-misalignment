@@ -178,10 +178,6 @@ def query_model_and_score(upma, model='gpt-4o-mini'):
     usage = sum(r.usage.total_tokens for r in responses.values())
     return scores, contents, usage
 
-def wait(duration, *args):
-    time.sleep(duration)
-    return args
-
 def query_model_all_parallel(upmas, model='gpt-4o-mini', log_path=None):
     scores = [None] * len(upmas)
     contents = [None] * len(upmas)
@@ -191,21 +187,24 @@ def query_model_all_parallel(upmas, model='gpt-4o-mini', log_path=None):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future_to_index = {executor.submit(query_model_and_score, upma, model): i for i, upma in enumerate(upmas)}
 
-        for future in tqdm(concurrent.futures.as_completed(future_to_index), total=len(upmas)):
-            index = future_to_index[future]
-            try:
-                score, content, usage = future.result()
-                scores[index] = score
-                contents[index] = content
-                total_usage += usage
-                if log_path is not None:
-                    with open(log_path, 'a') as f:
-                        f.write(str(score) + '\n')
-                        for s in content.values():
-                            f.write(s + '\n')
-                        f.write('\n')
-            except Exception as exc:
-                print(f'{upmas[index]} generated an exception: {exc}')
+        with tqdm(concurrent.futures.as_completed(future_to_index), total=len(upmas)) as t:
+            for future in t:
+                index = future_to_index[future]
+                try:
+                    score, content, usage = future.result()
+                    scores[index] = score
+                    contents[index] = content
+                    total_usage += usage
+                    if log_path is not None:
+                        with open(log_path, 'a') as f:
+                            f.write(str(score) + '\n')
+                            for s in content.values():
+                                f.write(s + '\n')
+                            f.write('\n')
+                    t.set_postfix({'phrases': len(phrases), 'toks': total_usage, '$': total_usage / 1e6 * token_rates[model]})
+
+                except Exception as exc:
+                    print(f'{upmas[index]} generated an exception: {exc}')
 
     print(f"Used {total_usage} tokens, cost est. ${total_usage/1e6*token_rate:.6f}")
 

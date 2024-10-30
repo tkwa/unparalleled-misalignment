@@ -17,6 +17,8 @@ from util import Phrase, token_rates
 from openai import OpenAI
 from typing import Iterable
 import string
+from collections import defaultdict
+import pickle
 
 import concurrent.futures
 import re
@@ -152,6 +154,17 @@ all_phrases, usage = generate_phrases(10000, 200, model='gpt-4o-mini', log_path=
 phrases_history.update(all_phrases)
 # %%
 
+from phrase_datasets import triple_union
+
+filtered_union = [ph for ph in triple_union if wn.synsets(ph.word1) and wn.synsets(ph.word2)]
+print(f"Filtered union: {len(filtered_union)} phrases")
+
+total_meanings = sum(len(wn.synsets(ph.word1)) * len(wn.synsets(ph.word2)) for ph in filtered_union)
+print(f"Total meanings: {total_meanings}")
+
+# %%
+
+
 def find_parallel_phrases(phrases: Iterable[Phrase]) -> list[set[Phrase]]:
     """
     Returns a list of tuples of parallel phrases of size at least 2
@@ -171,8 +184,51 @@ def find_parallel_phrases(phrases: Iterable[Phrase]) -> list[set[Phrase]]:
     print(f"Found {len(result)} sets of parallel phrases")
     return result
 
-parallel_phrases = find_parallel_phrases(phrases_history)
+def non_similar(ph1: Phrase, ph2: Phrase) -> bool:
+    # edit distance must be at least 3 for each word
+    return nltk.edit_distance(ph1.word1, ph2.word1) >= 3 and nltk.edit_distance(ph1.word2, ph2.word2) >= 3
 
+def find_parallel_phrases_fast(phrases: Iterable[Phrase]) -> dict[Phrase, set[Phrase]]:
+    """
+    Returns a list of tuples of parallel phrases of size at least 2
+    Keep a dict of synset pairs and check all synset pairs consistent with each phrase
+    """
+    print("Adding synset pairs...")
+    synset_pairs = defaultdict(set)
+    for ph in tqdm(phrases):
+        for syn1 in wn.synsets(ph.word1):
+            for syn2 in wn.synsets(ph.word2):
+                synset_pairs[(syn1, syn2)].add(ph)
+
+    print("Finding parallel phrases...")
+    result = defaultdict(set)
+    for ph in tqdm(phrases):
+        for syn1 in wn.synsets(ph.word1):
+            for syn2 in wn.synsets(ph.word2):
+                eligible_pairs = synset_pairs[(syn1, syn2)]
+                eligible_pairs = {other_ph for other_ph in eligible_pairs if \
+                                  non_similar(ph, other_ph)}
+                                  
+                result[ph] |= eligible_pairs
+
+    result = {ph: parallel for ph, parallel in result.items() if len(parallel) > 0}
+    print(f"Found {len(result)} sets of parallel phrases")
+    return result
+
+
+
+parallel_phrases = find_parallel_phrases_fast(filtered_union)
+
+parallel_phrases
 
 # %%
-parallel_phrases
+
+num_phrase_classes = len(parallel_phrases)
+print(f"Found {num_phrase_classes} sets of parallel phrases")
+total_phrases = sum(len(phrases) for phrases in parallel_phrases.values())
+print(f"Total phrases in parallel classes: {total_phrases}")
+
+
+# save to file
+with open('parallel_phrases.pkl', 'wb') as f:
+    pickle.dump(parallel_phrases, f)
