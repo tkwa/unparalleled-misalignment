@@ -83,7 +83,7 @@ def make_control_syn(upmas):
         if len(new_ph2) < 2:
             continue
         new_ph2 = Phrase(new_ph2)
-        control.append((ph1, new_ph2))
+        control.append((ph1, new_ph2) if random.random() < 0.5 else (new_ph2, ph1))
     return control
 
 
